@@ -45,15 +45,22 @@ Duas características guiaram as decisões do projeto:
 6. **Publicação:** modelo no Hugging Face, demo em Gradio e API com FastAPI + Docker.
 
 ---
+## Status do Projeto
 
+- [x] Exploração dos dados
+- [x] Guia de rotulagem (v1.1)
+- [x] Script de rotulagem com LLM
+- [ ] Revisão humana do conjunto de teste
+- [ ] Baseline e fine-tuning
+- [ ] Avaliação comparativa
+- [ ] Publicação e API
+---
 ## Decisões e aprendizados
 
 - **Um rótulo por avaliação:** Muitas avaliações têm mais de um problema (*"veio outro produto e não consigo falar com a central"*). Para caber no prazo, o guia define uma ordem de prioridade e o rótulo descreve o problema principal. Classificação multi-rótulo fica como próximo passo.
 - **Testar pequeno antes de rodar tudo:** Um teste com 40 avaliações revelou uma contradição no guia: *"produto falsificado"* estava listado como defeito, mas marca diferente da anunciada era produto errado. O guia foi corrigido e versionado (`v1.1`) antes de rotular as 2.000.
 - **Dados públicos no plano gratuito:** O plano gratuito do Gemini pode usar os dados enviados para melhorar os produtos do Google. Não há problema com um dataset público; com dados reais de clientes, a escolha seria um plano pago ou um modelo local.
-
 ---
-
 ## Estrutura do projeto
 
 ```text
@@ -65,7 +72,7 @@ AppTriagem/
 ├── results/     # Tabela de métricas e gráficos (em breve)
 └── README.md
 ```
-
+---
 ## Como rodar
 
 ### 1. Criar e ativar o ambiente virtual
