@@ -67,21 +67,31 @@ AppTriagem/
 ```
 
 ## Como rodar
-# Criar e ativar o ambiente virtual
+### 1. Criar e ativar o ambiente virtual
+```bash
 python3 -m venv .venv && source .venv/bin/activate
+```
 
-# Instalar dependências
+### 2. Instalar dependências
+```bash
 pip install pandas openai python-dotenv
+```
 
-# Configuração dos dados e ambiente:
-# 1. Coloque 'olist_order_reviews_dataset.csv' no diretório data/
-# 2. Crie um arquivo .env com: LLM_BASE_URL, LLM_API_KEY e LLM_MODEL
+### 3. Configuração dos dados e ambiente:
 
+#### 1. Coloque 'olist_order_reviews_dataset.csv' no diretório data/
+#### 2. Crie um arquivo .env com: LLM_BASE_URL, LLM_API_KEY e LLM_MODEL
+
+### 4. Execução do script de rotulagem
+```bash
 # Mostra o prompt, sem chamar a API
 python src/rotular.py --dry-run
-
+```
+``` bash
 # Teste rápido com 40 amostras
 python src/rotular.py --limite 40
-
+```
+```bash
 # Amostra completa respeitando rate limit
 python src/rotular.py --pausa 7
+```
