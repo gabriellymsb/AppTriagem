@@ -1,0 +1,22 @@
+{
+  "modelo": "tfidf+regressao_logistica",
+  "config": {
+    "C": 0.3,
+    "peso": "balanced",
+    "char": true,
+    "f1_val": 0.7026442535357783
+  },
+  "f1_macro_validacao": 0.7026442535357783,
+  "f1_macro_teste": 0.6280464281162346,
+  "f1_por_classe_teste": {
+    "nao_recebido": 0.775,
+    "atraso": 0.703,
+    "incompleto": 0.861,
+    "produto_errado": 0.6,
+    "defeito_qualidade": 0.672,
+    "atendimento": 0.429,
+    "elogio": 0.75,
+    "outros": 0.235
+  },
+  "latencia_ms": 0.3014
+}
