@@ -1,6 +1,6 @@
 # Guia de rotulagem — avaliações de pedidos
 
-Versão 1.1
+Versão 1.3
 
 ## Objetivo
 
@@ -18,7 +18,7 @@ Classificar cada avaliação de cliente em **exatamente um** rótulo, que descre
 
 ### `nao_recebido`
 O produto **ainda não chegou** no momento em que a avaliação foi escrita, ou o cliente diz que nunca recebeu.
-- Inclui: "ainda não recebi", "estou esperando até hoje", produto extraviado ou roubado no transporte, rastreio parado.
+- Inclui: "ainda não recebi", "estou esperando até hoje", produto extraviado ou roubado no transporte, rastreio parado, entrega não feita no endereço com o produto retido na transportadora ou para retirar nos Correios.
 - Não inclui: chegou parte do pedido (→ `incompleto`); chegou, mas tarde (→ `atraso`); pedido cancelado com pedido de reembolso (→ `atendimento`).
 - Exemplos: "Eu ainda não recebi o produto." · "Estou esperando até hoje." · "Meu produto foi roubado, ninguém resolveu."
 
@@ -58,7 +58,7 @@ Avaliação positiva **sem problema relevante**: satisfação com o produto, a e
 
 ### `outros`
 Texto sem informação suficiente para os rótulos acima, ou reclamação vaga/genérica.
-- Inclui: "obrigado", "ok", "empresa deixando a desejar", reclamação de logística que não é atraso, falta nem não entrega ("deveriam entregar tudo de uma vez"), perguntas sem problema descrito.
+- Inclui: "obrigado", "ok", "empresa deixando a desejar", raiva genérica com a loja sem problema concreto ("um lixo, nunca mais compro"), reclamação de logística que não é atraso, falta nem não entrega ("deveriam entregar tudo de uma vez"), perguntas sem problema descrito.
 - Exemplos: "Obrigado." · "Empresa está deixando a desejar."
 
 ## Ordem de prioridade (quando houver mais de um problema)
@@ -89,6 +89,12 @@ Exceção: **pedido cancelado** com reclamação de reembolso é `atendimento`, 
 | Nota 5, texto: "obrigado" | `outros` | Sem avaliação explícita; a nota não conta |
 | Onde consigo informações? Ainda não recebi | `nao_recebido` | A pergunta é consequência da não entrega |
 | Anúncio dizia Canon, veio um "compatível"/falsificado | `produto_errado` | Marca e originalidade são especificação objetiva do anúncio |
+| Cliente comprou errado/se arrependeu e pediu troca | `atendimento` | A loja entregou o pedido; o caso precisa do pós-venda. O rótulo descreve o que o caso precisa, não de quem é a culpa |
+| Não recebi e já mandei e-mail, sem resposta | `nao_recebido` | Não entrega vence atendimento na prioridade, mesmo com reclamação de contato |
+| Não foi entregue em casa, tenho que retirar nos Correios | `nao_recebido` | O cliente ainda não tem o produto |
+| "Não foi entregue no prazo" (sem dizer se chegou) | `atraso` | Reclama de demora sem afirmar que não recebeu |
+| Gostei, recomendo, só uns detalhes no acabamento | `elogio` | Crítica leve em avaliação positiva não vira defeito |
+| "Um lixo esse serviço, nunca mais compro" | `outros` | Reclamação genérica sem problema concreto, mesmo com raiva |
 
 <!-- FIM DO PROMPT: o que vem abaixo é só para revisão humana -->
 
@@ -104,3 +110,5 @@ Exceção: **pedido cancelado** com reclamação de reembolso é `atendimento`, 
 
 - 1.0 — versão inicial, a partir de 30 amostras de notas 1 e 2.
 - 1.1 — produto falsificado ou de outra marca passa a ser `produto_errado` (contradição encontrada no teste com 40 avaliações).
+- 1.2 — arrependimento ou erro do próprio cliente com pedido de troca é `atendimento` (caso da revisão humana).
+- 1.3 — regras para retirada nos Correios, contato + não recebido, crítica leve e raiva genérica (análise de discordâncias LLM × humano).
