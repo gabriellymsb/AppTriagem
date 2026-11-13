@@ -1,0 +1,67 @@
+{
+  "modelo": "neuralmind/bert-base-portuguese-cased",
+  "config": {
+    "modelo": "neuralmind/bert-base-portuguese-cased",
+    "epocas": 8,
+    "lr": 3e-05,
+    "batch": 16,
+    "max_len": 64,
+    "semente": 42
+  },
+  "dispositivo": "cuda",
+  "historico": [
+    {
+      "epoca": 1,
+      "perda_treino": 1.9292112870649858,
+      "f1_val": 0.3442216547819996
+    },
+    {
+      "epoca": 2,
+      "perda_treino": 1.0600863776423715,
+      "f1_val": 0.5401111918688638
+    },
+    {
+      "epoca": 3,
+      "perda_treino": 0.5126444922252135,
+      "f1_val": 0.6870175583474656
+    },
+    {
+      "epoca": 4,
+      "perda_treino": 0.24441727670756253,
+      "f1_val": 0.7335237606449287
+    },
+    {
+      "epoca": 5,
+      "perda_treino": 0.11288256208327684,
+      "f1_val": 0.7766813182947517
+    },
+    {
+      "epoca": 6,
+      "perda_treino": 0.056201934882185674,
+      "f1_val": 0.7636345268985456
+    },
+    {
+      "epoca": 7,
+      "perda_treino": 0.030587386035106398,
+      "f1_val": 0.7848987620461796
+    },
+    {
+      "epoca": 8,
+      "perda_treino": 0.023979499563574792,
+      "f1_val": 0.7824357240634892
+    }
+  ],
+  "f1_macro_validacao": 0.7848987620461796,
+  "f1_macro_teste": 0.753885457269512,
+  "f1_por_classe_teste": {
+    "nao_recebido": 0.857,
+    "atraso": 0.649,
+    "incompleto": 0.921,
+    "produto_errado": 0.807,
+    "defeito_qualidade": 0.86,
+    "atendimento": 0.606,
+    "elogio": 0.899,
+    "outros": 0.432
+  },
+  "latencia_ms": 3.346
+}
