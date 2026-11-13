@@ -95,22 +95,34 @@ def extrair_json(conteudo: str) -> dict:
     return json.loads(conteudo[inicio:fim + 1])
 
 
+def opcoes_do_provedor(base_url: str) -> dict:
+    """Parâmetros extras aceitos por cada provedor.
+
+    A camada de compatibilidade da API do Claude recusa response_format
+    "json_object" e, nos modelos mais novos, temperature abaixo de 1.
+    O script já extrai o JSON da resposta mesmo sem esses parâmetros.
+    """
+    if "anthropic.com" in base_url:
+        return {"max_tokens": 16000}
+    return {"temperature": 0, "response_format": {"type": "json_object"}}
+
+
 def classificar_lote(cliente, modelo, sistema, lote, tentativas=5) -> dict:
     mensagem = json.dumps(lote, ensure_ascii=False)
+    extras = opcoes_do_provedor(str(cliente.base_url))
     for t in range(tentativas):
         try:
             resp = cliente.chat.completions.create(
                 model=modelo,
-                temperature=0,
-                response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": sistema},
                     {"role": "user", "content": mensagem},
                 ],
+                **extras,
             )
             return extrair_json(resp.choices[0].message.content)["rotulos"]
         except Exception as erro:  # rede, limite de uso, JSON inválido
-            espera = 5 * 2 ** t
+            espera = 30 * 2 ** t
             print(f"  erro ({type(erro).__name__}: {erro}); "
                   f"nova tentativa em {espera}s", file=sys.stderr)
             time.sleep(espera)
@@ -163,7 +175,9 @@ def main():
 
     from openai import OpenAI
     cliente = OpenAI(base_url=os.environ["LLM_BASE_URL"],
-                     api_key=os.environ["LLM_API_KEY"])
+                     api_key=os.environ["LLM_API_KEY"],
+                     max_retries=0,   # quem decide as novas tentativas é o script
+                     timeout=300)     # desiste de uma chamada após 5 minutos
     modelo = os.environ["LLM_MODEL"]
 
     invalidos = 0
