@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Triagem de avaliações</title>
+<style>
+  :root {
+    --bg: #f7f6f3; --card: #ffffff; --ink: #1d1d1f; --quiet: #5f5f66; --line: #e3e1dc;
+    --accent: #c2332b; --accent-soft: #f6e3e1; --bar: #e9e7e2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141416; --card: #1e1e21; --ink: #f2f2f3; --quiet: #a3a3aa; --line: #303035;
+            --accent: #ff6b5e; --accent-soft: #3a2220; --bar: #2c2c31; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sub { color: var(--quiet); margin: 0 0 24px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  label { font-weight: 600; display: block; margin-bottom: 8px; }
+  textarea { width: 100%; min-height: 110px; padding: 12px; font: inherit; color: var(--ink);
+             background: var(--bg); border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row { display: flex; gap: 12px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  button { font: inherit; font-weight: 600; border: 0; border-radius: 8px; padding: 10px 18px;
+           background: var(--accent); color: #fff; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: progress; }
+  #status { color: var(--quiet); font-size: .9rem; }
+  .ex-title { font-weight: 600; margin: 24px 0 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { background: var(--card); color: var(--ink); border: 1px solid var(--line); font-weight: 400;
+          padding: 6px 10px; font-size: .88rem; text-align: left; }
+  .chip:hover { border-color: var(--accent); }
+  #resultado { margin-top: 20px; }
+  .top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .top .nome { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+  .top .desc { color: var(--quiet); font-size: .92rem; }
+  .linha { display: grid; grid-template-columns: minmax(120px, 34%) 1fr 52px; gap: 10px;
+           align-items: center; margin: 6px 0; font-size: .92rem; }
+  .barra { height: 10px; background: var(--bar); border-radius: 5px; overflow: hidden; }
+  .barra span { display: block; height: 100%; background: var(--accent); border-radius: 5px; }
+  .pct { text-align: right; font-variant-numeric: tabular-nums; color: var(--quiet); }
+  .nota { color: var(--quiet); font-size: .88rem; margin-top: 28px; }
+  .nota a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Triagem de avaliações de clientes</h1>
+  <p class="sub">Digite a avaliação de um cliente e veja qual é o problema principal do pedido.
+     O modelo roda no seu navegador: nenhum texto é enviado a um servidor.</p>
+
+  <div class="card">
+    <label for="texto">Avaliação do cliente</label>
+    <textarea id="texto" placeholder="Ex.: Comprei 2 colchas e só veio 1."></textarea>
+    <div class="row">
+      <button id="classificar" disabled>Classificar</button>
+      <span id="status" role="status">Carregando o modelo (cerca de 110 MB na primeira visita)…</span>
+    </div>
+    <div id="resultado" aria-live="polite"></div>
+  </div>
+
+  <p class="ex-title">Exemplos reais do dataset</p>
+  <div class="chips" id="exemplos"></div>
+
+  <p class="nota">
+    Modelo: <a href="https://huggingface.co/gabriellymsb/bertimbau-triagem-avaliacoes">BERTimbau ajustado</a>,
+    treinado com rótulos gerados por um LLM e avaliado contra rótulos humanos (F1 macro de 0,754 no teste).
+    Projeto completo no <a href="https://github.com/gabriellymsb/AppTriagem">GitHub</a>.<br><br>
+    <strong>Limitações conhecidas:</strong> textos com dois problemas recebem só o principal; contrastes
+    ("recomendo a loja, mas não o produto"), texto todo em maiúsculas e erros de digitação podem confundir
+    o modelo. Esta demo usa a versão quantizada (8 bits), que pode diferir levemente da original.
+  </p>
+</main>
+
+<script type="module">
+  const BIBLIOTECA = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+  const MODELO = "gabriellymsb/bertimbau-triagem-avaliacoes";
+
+  const CLASSES = {
+    nao_recebido: ["Não recebido", "O produto ainda não chegou ou não foi entregue no endereço"],
+    atraso: ["Atraso", "Chegou depois do prazo, ou reclamação de demora"],
+    incompleto: ["Incompleto", "Chegou só parte do pedido"],
+    produto_errado: ["Produto errado", "Item diferente do pedido ou do anunciado"],
+    defeito_qualidade: ["Defeito / qualidade", "Item certo, mas com defeito ou qualidade ruim"],
+    atendimento: ["Atendimento", "Troca, devolução, reembolso, cancelamento ou falta de resposta"],
+    elogio: ["Elogio", "Avaliação positiva, sem problema relevante"],
+    outros: ["Outros", "Sem informação suficiente ou reclamação genérica"],
+  };
+
+  const EXEMPLOS = [
+    "Eu ainda não recebi o produto.",
+    "O prazo era de 14 dias e chegou quase um mês depois.",
+    "Só foi entregue o cartucho da tinta preta. Falta o outro cartucho da tinta colorida.",
+    "Veio o copo errado. Vendeu como copo de 470ml e veio copos de 400ml.",
+    "Parece que o produto não foi testado antes de sair da loja, produto defeituoso.",
+    "Informaram que seria 48 horas pra confirmar a devolução e até o momento nada.",
+    "Chegou antes do prazo, muito bem embalado. Recomendo!",
+    "Recomendo a loja, mas não o produto.",
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const texto = $("texto"), botao = $("classificar"), status = $("status"), saida = $("resultado");
+  let classificador = null;
+
+  for (const ex of EXEMPLOS) {
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = ex;
+    b.addEventListener("click", () => { texto.value = ex; if (classificador) classificar(); });
+    $("exemplos").appendChild(b);
+  }
+
+  function mostrar(resultado) {
+    saida.replaceChildren();
+    const [nome, desc] = CLASSES[resultado[0].label] ?? [resultado[0].label, ""];
+    const top = document.createElement("div"); top.className = "top";
+    const n = document.createElement("span"); n.className = "nome"; n.textContent = nome;
+    const d = document.createElement("span"); d.className = "desc"; d.textContent = desc;
+    top.append(n, d); saida.append(top);
+    for (const r of resultado) {
+      const linha = document.createElement("div"); linha.className = "linha";
+      const rotulo = document.createElement("span"); rotulo.textContent = (CLASSES[r.label] ?? [r.label])[0];
+      const barra = document.createElement("div"); barra.className = "barra";
+      const cheio = document.createElement("span"); cheio.style.width = `${(r.score * 100).toFixed(1)}%`;
+      barra.append(cheio);
+      const pct = document.createElement("span"); pct.className = "pct"; pct.textContent = `${Math.round(r.score * 100)}%`;
+      linha.append(rotulo, barra, pct); saida.append(linha);
+    }
+  }
+
+  async function classificar() {
+    const t = texto.value.trim();
+    if (!t) { saida.replaceChildren(); return; }
+    botao.disabled = true; status.textContent = "Classificando…";
+    try {
+      const inicio = performance.now();
+      const resultado = await classificador(t.slice(0, 1000), { top_k: 3 });
+      mostrar(resultado);
+      status.textContent = `Classificado em ${Math.round(performance.now() - inicio)} ms, no seu navegador.`;
+    } catch (e) {
+      status.textContent = "Erro ao classificar: " + e.message;
+    } finally { botao.disabled = false; }
+  }
+
+  botao.addEventListener("click", classificar);
+  texto.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) classificar(); });
+
+  try {
+    const { pipeline, env } = await import(BIBLIOTECA);
+    if (window.CONFIG_TESTE) window.CONFIG_TESTE(env);
+    classificador = await pipeline("text-classification", MODELO, {
+      dtype: "q8",
+      progress_callback: (p) => {
+        if (p.status === "progress" && p.file?.endsWith(".onnx")) {
+          status.textContent = `Baixando o modelo… ${Math.round(p.progress)}%`;
+        }
+      },
+    });
+    botao.disabled = false;
+    status.textContent = "Modelo pronto. Digite uma avaliação ou clique em um exemplo.";
+  } catch (e) {
+    status.textContent = "Não foi possível carregar o modelo: " + e.message;
+  }
+</script>
+</body>
+</html>
